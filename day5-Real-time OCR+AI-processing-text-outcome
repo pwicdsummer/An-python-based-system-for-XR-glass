@@ -1,0 +1,117 @@
+#====================
+#AI模型加载区
+#====================
+from llama_cpp import Llama
+
+print("正在加载 Baichuan2 模型，请稍后...")
+
+llm = Llama(
+        model_path="C:/Users/kz740/PycharmProjects/PythonProject1/models/baichuan2-7b-chat.Q4_K.gguf",
+        n_ctx=2048,
+        n_threads=8,
+        verbose=False
+    )
+
+print("模型加载完成")
+
+
+
+#====================
+#AI功能区
+#====================
+def ask_ai(text):
+    print("AI正在思考中，请稍后")
+    response=llm(
+        f"请解释以下内容：{text}",
+        max_tokens=256
+    )
+    return response["choices"][0]["text"]
+
+
+
+#====================
+#OCR功能区（仅做OCR）
+#====================
+def get_text_lines_from_frame(frame):
+    import cv2
+    import easyocr
+
+    gray=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    binary=cv2.adaptiveThreshold(
+        gray,255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        31,10
+    )
+
+    reader=easyocr.Reader(["ch_sim","en"],gpu=False)
+    result=reader.readtext(binary)
+
+    lines=[text for _,text,conf in result if conf > 0.4]
+    return lines
+
+
+
+#====================
+#单帧处理
+#====================
+def process_frame(frame):
+    lines=get_text_lines_from_frame(frame)
+
+    if not lines:
+        print("未识别文本")
+        return
+
+    for i,line in enumerate(lines):
+        print(f"[{i}] {line}")
+
+    idx=input("请选择要解释的编号:")
+    if not idx.isdigit():
+        return
+
+    selected=lines[int(idx)]
+
+    result=ask_ai(selected)
+    print(result)
+
+
+
+#====================
+#摄像头循环
+#====================
+import cv2
+
+def camera_loop():
+    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # ← 改这里
+
+    if not cap.isOpened():
+        print("❌ 无法打开摄像头")
+        return
+
+    print("✅ 摄像头已启动（手机 Camo）")
+    print("按 c 进行 OCR，按 q 退出")
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        cv2.imshow("Camera", frame)
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            break
+        elif key == ord("c"):
+            process_frame(frame)
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+
+#====================
+#程序入口
+#====================
+if __name__=="__main__":
+    camera_loop()
