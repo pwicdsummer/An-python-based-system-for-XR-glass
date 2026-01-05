@@ -13,3 +13,5 @@ Technology stack
 -OpenCV
 -EasyOCR
 -PaddleOCR
+
+The latest project display:https://www.bilibili.com/video/BV1kci4BPEgL/?spm_id_from=333.1387.homepage.video_card.click&vd_source=33b2c0e5b4c3b7ce3c4d2f9e7f046260
